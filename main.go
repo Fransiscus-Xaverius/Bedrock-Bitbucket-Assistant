@@ -12,7 +12,26 @@ import (
 )
 
 // webhookPayload models the parts we need from Bitbucket webhook
+// type webhookPayload struct {
+// 	PullRequest struct {
+// 		ID int `json:"id"`
+// 	} `json:"pullrequest"`
+
+// 	Repository struct {
+// 		FullName string `json:"full_name"` // e.g. "workspace/repo-slug"
+// 	} `json:"repository"`
+// }
+
 type webhookPayload struct {
+	Push struct {
+		Changes []struct {
+			Commits []struct {
+				Hash    string `json:"hash"`
+				Message string `json:"message"`
+			} `json:"commits"`
+		} `json:"changes"`
+	} `json:"push"`
+
 	PullRequest struct {
 		ID int `json:"id"`
 	} `json:"pullrequest"`
@@ -21,6 +40,7 @@ type webhookPayload struct {
 		FullName string `json:"full_name"` // e.g. "workspace/repo-slug"
 	} `json:"repository"`
 }
+
 
 // commentRequest represents the structure for Bitbucket comment API
 type commentRequest struct {
@@ -74,6 +94,40 @@ func main() {
 		if payload.PullRequest.ID == 0 {
 			log.Printf("Missing or invalid pull request ID in payload")
 			return c.Status(fiber.StatusBadRequest).SendString("Missing pull request information")
+		}
+
+		if len(payload.Push.Changes) == 0 {
+			log.Println("No push changes found in payload")
+			return c.Status(fiber.StatusBadRequest).SendString("No commits to process")
+		}
+
+		// Process each commit
+		for _, change := range payload.Push.Changes {
+			for _, commit := range change.Commits {
+				log.Printf("Processing commit: %s", commit.Hash)
+
+				// Build URL to get commit detail
+				commitURL := fmt.Sprintf("https://api.bitbucket.org/2.0/repositories/%s/commit/%s", payload.Repository, commit.Hash)
+
+				// Request commit detail
+				resp, err := client.R().
+					SetAuthToken(token).
+					SetHeader("Accept", "application/json").
+					Get(commitURL)
+
+				if err != nil {
+					log.Printf("Failed to fetch commit %s: %v", commit.Hash, err)
+					continue
+				}
+
+				if resp.IsError() {
+					log.Printf("Error from Bitbucket API for commit %s: %s", commit.Hash, resp.String())
+					continue
+				}
+
+				// Print commit data
+				log.Printf("Commit %s details: %s", commit.Hash, resp.String())
+			}
 		}
 
 		// Build comment URL
