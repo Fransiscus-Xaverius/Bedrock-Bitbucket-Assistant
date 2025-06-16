@@ -2,7 +2,10 @@ module bedrock-poc
 
 go 1.24.2
 
-require github.com/gofiber/fiber/v2 v2.52.8
+require (
+	github.com/go-resty/resty/v2 v2.16.5
+	github.com/gofiber/fiber/v2 v2.52.8
+)
 
 require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
@@ -15,5 +18,6 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.51.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 )
