@@ -131,10 +131,7 @@ func main() {
 			log.Printf("Successfully posted comment to PR #%d in %s", payload.PullRequest.ID, repo)
 		}
 
-				// If Push Commits exist -> Fetch PR commit list instead
-		if len(payload.Push.Changes) > 0 && payload.PullRequest.ID != 0 {
-			// Use the PR ID to get list of commits in the PR
-			commitListURL := fmt.Sprintf(
+		commitListURL := fmt.Sprintf(
 				"https://api.bitbucket.org/2.0/repositories/%s/pullrequests/%d/commits",
 				repo,
 				payload.PullRequest.ID,
@@ -156,7 +153,6 @@ func main() {
 			}
 
 			log.Printf("Commits for PR #%d:\n%s", payload.PullRequest.ID, resp.String())
-		}
 
 		return c.JSON(fiber.Map{
 			"status":  "success",
