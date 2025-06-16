@@ -131,32 +131,31 @@ func main() {
 			log.Printf("Successfully posted comment to PR #%d in %s", payload.PullRequest.ID, repo)
 		}
 
-		// If Push Commits exist -> Fetch & print changes
-		if len(payload.Push.Changes) > 0 {
-			for _, change := range payload.Push.Changes {
-				for _, commit := range change.Commits {
-					log.Printf("Processing commit: %s", commit.Hash)
+				// If Push Commits exist -> Fetch PR commit list instead
+		if len(payload.Push.Changes) > 0 && payload.PullRequest.ID != 0 {
+			// Use the PR ID to get list of commits in the PR
+			commitListURL := fmt.Sprintf(
+				"https://api.bitbucket.org/2.0/repositories/%s/pullrequests/%d/commits",
+				repo,
+				payload.PullRequest.ID,
+			)
 
-					commitURL := fmt.Sprintf("https://api.bitbucket.org/2.0/repositories/%s/commit/%s", repo, commit.Hash)
+			resp, err := client.R().
+				SetAuthToken(os.Getenv("BB_REPO_ACCESS_TOKEN")).
+				SetHeader("Accept", "application/json").
+				Get(commitListURL)
 
-					resp, err := client.R().
-						SetAuthToken(os.Getenv("BB_REPO_ACCESS_TOKEN")).
-						SetHeader("Accept", "application/json").
-						Get(commitURL)
-
-					if err != nil {
-						log.Printf("Failed to fetch commit %s: %v", commit.Hash, err)
-						continue
-					}
-
-					if resp.IsError() {
-						log.Printf("Error from Bitbucket API for commit %s: %s", commit.Hash, resp.String())
-						continue
-					}
-
-					log.Printf("Commit %s details:\n%s", commit.Hash, resp.String())
-				}
+			if err != nil {
+				log.Printf("Failed to fetch commits for PR #%d: %v", payload.PullRequest.ID, err)
+				return c.Status(fiber.StatusInternalServerError).SendString("Failed to fetch PR commits")
 			}
+
+			if resp.IsError() {
+				log.Printf("Error from Bitbucket API for PR #%d: %s", payload.PullRequest.ID, resp.String())
+				return c.Status(fiber.StatusInternalServerError).SendString("Bitbucket API error on PR commits")
+			}
+
+			log.Printf("Commits for PR #%d:\n%s", payload.PullRequest.ID, resp.String())
 		}
 
 		return c.JSON(fiber.Map{
