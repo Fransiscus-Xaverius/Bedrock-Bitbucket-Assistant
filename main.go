@@ -78,6 +78,9 @@ func main() {
 
 	// Bitbucket webhook handler
 	app.Post("/bitbucket", func(c *fiber.Ctx) error {
+
+		log.Printf("Received webhook payload: %+v", c.Body())
+
 		var payload webhookPayload
 		if err := c.BodyParser(&payload); err != nil {
 			log.Printf("Failed to parse webhook payload: %v", err)
