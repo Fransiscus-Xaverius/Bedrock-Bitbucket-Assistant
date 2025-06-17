@@ -187,7 +187,8 @@ func main() {
 		}
 
 		if payload.PullRequest.ID != 0 {
-			claudeResponse, err := wrapper.InvokeClaude(c.Context(), `Create a PR comment for these changes, please check for vulnerabilities and bugs for this code package main
+			claudeResponse, err := wrapper.InvokeClaude(c.Context(), `Create a PR comment for these changes, please check for vulnerabilities and bugs for this code on the file tes.go 
+   package main
 
 import (
 	"database/sql"
