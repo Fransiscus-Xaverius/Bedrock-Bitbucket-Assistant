@@ -79,7 +79,7 @@ func main() {
 	// Bitbucket webhook handler
 	app.Post("/bitbucket", func(c *fiber.Ctx) error {
 
-		log.Printf("Received webhook payload: %+v", c.Body())
+		log.Printf("Received webhook payload: %+v", string(c.Body()))
 
 		var payload webhookPayload
 		if err := c.BodyParser(&payload); err != nil {
