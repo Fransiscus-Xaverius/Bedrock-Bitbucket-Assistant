@@ -187,7 +187,56 @@ func main() {
 		}
 
 		if payload.PullRequest.ID != 0 {
-			claudeResponse, err := wrapper.InvokeClaude(c.Context(), "Give me a message to say looks good to me for this PR")
+			claudeResponse, err := wrapper.InvokeClaude(c.Context(), `Create a PR comment for these changes, please check for vulnerabilities and bugs for this code package main
+
+import (
+	"database/sql"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"os/exec"
+)
+
+func vulnerableHandler(w http.ResponseWriter, r *http.Request) {
+	// 1. Command Injection
+	userInput := r.URL.Query().Get("cmd")
+	out, _ := exec.Command("sh", "-c", userInput).Output()
+	fmt.Fprintf(w, "Command output:\n%s\n", out)
+
+	// 2. SQL Injection
+	username := r.URL.Query().Get("username")
+	db, _ := sql.Open("mysql", "root:password@tcp(localhost:3306)/testdb")
+	query := "SELECT password FROM users WHERE username = '" + username + "'"
+	rows, _ := db.Query(query)
+	defer rows.Close()
+	for rows.Next() {
+		var password string
+		rows.Scan(&password)
+		fmt.Fprintf(w, "Password for %s is %s\n", username, password)
+	}
+
+	// 3. Path Traversal
+	file := r.URL.Query().Get("file")
+	content, _ := ioutil.ReadFile("/var/www/" + file)
+	fmt.Fprintf(w, "File content:\n%s\n", content)
+
+	// 4. Hardcoded credentials
+	if r.URL.Query().Get("auth") == "supersecret123" {
+		fmt.Fprintf(w, "Authenticated as admin\n")
+	}
+
+	// 5. Information Disclosure
+	envVars := os.Environ()
+	fmt.Fprintf(w, "Environment variables:\n%v\n", envVars)
+}
+
+func main() {
+	http.HandleFunc("/", vulnerableHandler)
+	fmt.Println("Listening on :8080")
+	http.ListenAndServe(":8080", nil)
+}
+`)
 			if err != nil {
 				log.Printf("Failed to invoke Claude: %v", err)
 				return c.Status(fiber.StatusInternalServerError).SendString("Failed to generate comment")
