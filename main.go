@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	// "github.com/go-resty/resty/v2"
+	"github.com/go-resty/resty/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/joho/godotenv"
@@ -65,7 +65,7 @@ func main() {
 	}
 
 	// Initialize Resty client
-	// client := resty.New()
+	client := resty.New()
 
 	// Initialize Fiber app
 	app := fiber.New(fiber.Config{
