@@ -84,6 +84,8 @@ func main() {
 			return c.Status(fiber.StatusBadRequest).SendString("Invalid JSON payload")
 		}
 
+		log.Printf("Received webhook payload: %+v", payload)
+
 		repo := payload.Repository.FullName
 		if repo == "" {
 			log.Printf("Missing repository full_name in payload")
